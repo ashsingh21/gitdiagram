@@ -6,7 +6,6 @@ from app.routers import generate, modify
 from app.core.limiter import limiter
 from typing import cast
 from starlette.exceptions import ExceptionMiddleware
-from api_analytics.fastapi import Analytics
 import os
 
 
@@ -22,10 +21,6 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-
-API_ANALYTICS_KEY = os.getenv("API_ANALYTICS_KEY")
-if API_ANALYTICS_KEY:
-    app.add_middleware(Analytics, api_key=API_ANALYTICS_KEY)
 
 app.state.limiter = limiter
 app.add_exception_handler(

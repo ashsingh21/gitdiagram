@@ -1,9 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  cacheDiagramAndExplanation,
-  getCachedDiagram,
-} from "~/app/_actions/cache";
-import { getLastGeneratedDate } from "~/app/_actions/repo";
 import { getCostOfGeneration } from "~/lib/fetch-backend";
 import { exampleRepos } from "~/lib/exampleRepos";
 
@@ -189,15 +184,6 @@ export function useDiagram(username: string, repo: string) {
                           explanation: data.explanation,
                           diagram: data.diagram,
                         });
-                        const date = await getLastGeneratedDate(username, repo);
-                        setLastGenerated(date ?? undefined);
-                        if (!hasUsedFreeGeneration) {
-                          localStorage.setItem(
-                            "has_used_free_generation",
-                            "true",
-                          );
-                          setHasUsedFreeGeneration(true);
-                        }
                         break;
                       case "error":
                         setState({ status: "error", error: data.error });
@@ -226,24 +212,14 @@ export function useDiagram(username: string, repo: string) {
         setLoading(false);
       }
     },
-    [username, repo, hasUsedFreeGeneration],
+    [username, repo],
   );
 
   useEffect(() => {
     if (state.status === "complete" && state.diagram) {
       // Cache the completed diagram with the usedOwnKey flag
       const hasApiKey = !!localStorage.getItem("openai_key");
-      void cacheDiagramAndExplanation(
-        username,
-        repo,
-        state.diagram,
-        state.explanation ?? "No explanation provided",
-        hasApiKey,
-      );
       setDiagram(state.diagram);
-      void getLastGeneratedDate(username, repo).then((date) =>
-        setLastGenerated(date ?? undefined),
-      );
     } else if (state.status === "error") {
       setLoading(false);
     }
@@ -255,27 +231,7 @@ export function useDiagram(username: string, repo: string) {
     setCost("");
 
     try {
-      // Check cache first - always allow access to cached diagrams
-      const cached = await getCachedDiagram(username, repo);
       const github_pat = localStorage.getItem("github_pat");
-
-      if (cached) {
-        setDiagram(cached);
-        const date = await getLastGeneratedDate(username, repo);
-        setLastGenerated(date ?? undefined);
-        return;
-      }
-
-      // TEMP: LET USERS HAVE INFINITE GENERATIONS
-      // Only check for API key if we need to generate a new diagram
-      // const storedApiKey = localStorage.getItem("openai_key");
-      // if (hasUsedFreeGeneration && !storedApiKey) {
-      //   setError(
-      //     "You've used your one free diagram. Please enter your API key to continue. As a student, I can't afford to keep it totally free and I hope you understand :)",
-      //   );
-      //   setState({ status: "error", error: "API key required" });
-      //   return;
-      // }
 
       // Get cost estimate
       const costEstimate = await getCostOfGeneration(
