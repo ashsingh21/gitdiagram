@@ -50,15 +50,6 @@ async def modify(request: Request, body: ModifyRequest):
         ]:
             return {"error": "Example repos cannot be modified"}
 
-        # modified_mermaid_code = claude_service.call_claude_api(
-        #     system_prompt=SYSTEM_MODIFY_PROMPT,
-        #     data={
-        #         "instructions": body.instructions,
-        #         "explanation": body.explanation,
-        #         "diagram": body.current_diagram,
-        #     },
-        # )
-
         modified_mermaid_code = o1_service.call_o1_api(
             system_prompt=SYSTEM_MODIFY_PROMPT,
             data={
